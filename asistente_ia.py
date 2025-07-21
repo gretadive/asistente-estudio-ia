@@ -169,10 +169,10 @@ def detectar_tema(texto):
 
 def guardar_resultado(nombre, tema, puntaje, total):
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    fila = [nombre, tema, puntaje, total, fecha]
-    with open("resultados/resultados.csv", "a", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(fila)
+    linea = f"{fecha} | Nombre: {nombre} | Puntaje: {puntaje}/{total}\n"
+    with open("resultados/resultados.txt", "a", encoding="utf-8") as f:
+        f.write(linea)
+
 
 # Inicializar estado
 for key in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema"]:
@@ -242,7 +242,8 @@ if st.session_state["mostrar_preguntas"]:
 
         # Guardar resultados automáticamente
         guardar_resultado(nombre_estudiante.strip(), st.session_state["tema"], puntaje, total)
-        st.info("📝 Resultado guardado en `resultados/resultados.csv`.")
+        st.info("📝 Resultado guardado en `resultados/resultados.txt`.")
+
 
         if st.button("🔁 Volver a intentar"):
           for k in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema"]:
