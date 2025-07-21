@@ -226,6 +226,9 @@ if st.session_state["mostrar_preguntas"]:
     preguntas = temas[st.session_state["tema"]]["preguntas"]
     i = st.session_state["indice"]
 
+    if "respuestas" not in st.session_state:
+        st.session_state["respuestas"] = []
+
     if i < len(preguntas):
         p = preguntas[i]
         st.markdown(f"### Pregunta {i + 1}: {p['pregunta']}")
@@ -233,70 +236,41 @@ if st.session_state["mostrar_preguntas"]:
 
         if not st.session_state["respondido"]:
             if st.button("Responder"):
-                if respuesta_usuario == p["respuesta"]:
+                correcto = respuesta_usuario == p["respuesta"]
+                if correcto:
                     st.success("✅ ¡Correcto!")
                     st.session_state["puntaje"] += 1
                 else:
                     st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta']}")
                 st.session_state["respondido"] = True
+
+                st.session_state["respuestas"].append({
+                    "pregunta": p["pregunta"],
+                    "respuesta_usuario": respuesta_usuario,
+                    "respuesta_correcta": p["respuesta"],
+                    "correcto": correcto
+                })
         else:
             if st.button("➡️ Siguiente"):
-               st.session_state["indice"] += 1
-               st.session_state["respondido"] = False
-               st.rerun()  # ✅ ESTO ES SEGURO
-   
-      st.session_state["respuestas"].append({
-       "pregunta": p["pregunta"],
-       "respuesta_usuario": respuesta_usuario,
-       "respuesta_correcta": p["respuesta"],
-       "correcto": respuesta_usuario == p["respuesta"]
-})
-
-
+                st.session_state["indice"] += 1
+                st.session_state["respondido"] = False
+                st.rerun()
     else:
         total = len(preguntas)
         puntaje = st.session_state["puntaje"]
         st.success(f"🎉 Has terminado. Tu puntaje: **{puntaje} de {total}**")
 
-        # -------- GUARDAR RESULTADOS Y DESCARGAR TXT --------
-import base64
-
-else:
-    total = len(preguntas)
-    puntaje = st.session_state["puntaje"]
-
-    if "mostrar_resultado_final" not in st.session_state:
-        st.session_state["mostrar_resultado_final"] = False
-
-    if not st.session_state["mostrar_resultado_final"]:
-        if st.button("📊 Ver Nota Final"):
-            st.session_state["mostrar_resultado_final"] = True
-            st.rerun()
-           else:
-            nota = (puntaje / total) * 100
-            estado = "✅ Aprobado" if nota >= 60 else "❌ Desaprobado"
-
-            st.success(f"🎯 Tu puntaje final es: **{puntaje} / {total}**")
-            st.info(f"📈 Nota final: **{nota:.2f}%** — {estado}")
-
-            
-
-            # Guardar en TXT
-            ruta_txt, nombre_txt = guardar_resultado_txt(
+        if st.button("📄 Guardar resultado en TXT"):
+            guardar_resultado(
                 nombre_estudiante.strip(),
                 st.session_state["tema"],
                 puntaje,
                 total,
                 st.session_state["respuestas"]
             )
-
-            with open(ruta_txt, "rb") as f:
-                contenido = f.read()
-                b64 = base64.b64encode(contenido).decode()
-                href = f'<a href="data:file/txt;base64,{b64}" download="{nombre_txt}">📥 Descargar resultado</a>'
-                st.markdown(href, unsafe_allow_html=True)
+            st.success("✅ Resultado guardado en `resultados/resultados.txt`.")
 
             if st.button("🔁 Volver a intentar"):
-                for k in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema", "respuestas", "mostrar_resultado_final"]:
+                for k in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema", "respuestas"]:
                     st.session_state[k] = None
                 st.rerun()
