@@ -258,19 +258,45 @@ if st.session_state["mostrar_preguntas"]:
     else:
         total = len(preguntas)
         puntaje = st.session_state["puntaje"]
-        st.success(f"🎉 Has terminado. Tu puntaje: **{puntaje} de {total}**")
+        nota = (puntaje / total) * 100
+        estado = "✅ Aprobado" if nota >= 60 else "❌ Desaprobado"
 
-        if st.button("📄 Guardar resultado en TXT"):
-            guardar_resultado(
-                nombre_estudiante.strip(),
-                st.session_state["tema"],
-                puntaje,
-                total,
-                st.session_state["respuestas"]
-            )
-            st.success("✅ Resultado guardado en `resultados/resultados.txt`.")
+        st.success(f"🎯 Tu puntaje final es: **{puntaje} / {total}**")
+        st.info(f"📈 Nota final: **{nota:.2f}%** — {estado}")
 
-            if st.button("🔁 Volver a intentar"):
-                for k in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema", "respuestas"]:
-                    st.session_state[k] = None
-                st.rerun()
+        # Generar resultado automáticamente
+        guardar_resultado(
+            nombre_estudiante.strip(),
+            st.session_state["tema"],
+            puntaje,
+            total,
+            st.session_state["respuestas"]
+        )
+
+        # Crear contenido del archivo para descarga
+        contenido = io.StringIO()
+        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        contenido.write(f"👤 Nombre: {nombre_estudiante.strip()}\n")
+        contenido.write(f"📅 Fecha: {fecha}\n")
+        contenido.write(f"📚 Tema: {st.session_state['tema']}\n")
+        contenido.write(f"🏁 Puntaje: {puntaje}/{total}\n")
+        contenido.write("📋 Detalle de preguntas:\n")
+        contenido.write("-" * 50 + "\n")
+        for i, r in enumerate(st.session_state["respuestas"], 1):
+            estado_r = "✅ Correcto" if r["correcto"] else "❌ Incorrecto"
+            contenido.write(f"{i}. {r['pregunta']}\n")
+            contenido.write(f"   ➤ Tu respuesta: {r['respuesta_usuario']}\n")
+            contenido.write(f"   ✔ Correcta: {r['respuesta_correcta']} — {estado_r}\n\n")
+        contenido.write("=" * 50 + "\n\n")
+
+        # Mostrar botón de descarga automática
+        b64 = base64.b64encode(contenido.getvalue().encode()).decode()
+        nombre_archivo = f"resultado_{nombre_estudiante.strip().replace(' ', '_')}.txt"
+        href = f'<a href="data:file/txt;base64,{b64}" download="{nombre_archivo}">📥 Descargar resultado</a>'
+        st.markdown(href, unsafe_allow_html=True)
+
+        # Botón para reiniciar
+        if st.button("🔁 Volver a intentar"):
+            for k in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema", "respuestas"]:
+                st.session_state[k] = None
+            st.rerun()
