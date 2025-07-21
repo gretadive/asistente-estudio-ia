@@ -260,8 +260,8 @@ if st.session_state["mostrar_preguntas"]:
     else:
         total = len(preguntas)
         puntaje = st.session_state["puntaje"]
-        nota = (puntaje / total) * 100
-        estado = "✅ Aprobado" if nota >= 60 else "❌ Desaprobado"
+        nota = (puntaje / total) * 20
+        estado = "✅ Aprobado" if nota >= 15 else "❌ Desaprobado"
 
         st.success(f"🎯 Tu puntaje final es: **{puntaje} / {total}**")
         st.info(f"📈 Nota final: **{nota:.2f}%** — {estado}")
