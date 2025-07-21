@@ -24,11 +24,11 @@ def extraer_texto_pdf(file):
 # 🔍 Detectar tema del contenido
 def detectar_tema(texto):
     texto = texto.lower()
-    if "velocidad constante" in texto and "aceleración nula" in texto:
+    if "MRU" in texto and "aceleración nula" in texto:
         return "MRU"
-    elif "aceleración constante" in texto and "v = v₀ + at" in texto:
+    elif "MRUV" in texto and "v = v₀ + at" in texto:
         return "MRUV"
-    elif "gravedad" in texto or "caída libre" in texto or "9.8" in texto:
+    elif "caída Libre" in texto or "caída libre" in texto or "9.8" in texto:
         return "Caída Libre"
     return None
 
