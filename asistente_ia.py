@@ -2,6 +2,8 @@ import streamlit as st
 import fitz  # PyMuPDF
 import io
 import re
+import csv
+from datetime import datetime
 from temas import temas
 
 st.set_page_config(page_title="Asistente de Estudio IA", page_icon="📘")
@@ -36,8 +38,14 @@ def guardar_resultado(nombre, tema, puntaje, total):
     fila = [nombre, tema, puntaje, total, fecha]
     with open("resultados.csv", "a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(fila)   
+        writer.writerow(fila)
 
+# Inicializar variables de estado si no existen
+for key in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema"]:
+    if key not in st.session_state:
+        st.session_state[key] = None
+
+# ---- Si se subió un PDF ----
 if pdf_file:
     texto = extraer_texto_pdf(pdf_file)
     tema = detectar_tema(texto)
@@ -58,15 +66,18 @@ if pdf_file:
                 st.session_state["puntaje"] = 0
                 st.session_state["respondido"] = False
                 st.session_state["tema"] = tema
-    
+
         with col3:
             if st.button("💡 Flashcards"):
                 st.subheader("💡 Flashcards")
                 for fc in temas[tema]["flashcards"]:
                     with st.expander(fc["concepto"]):
                         st.write(fc["definicion"])
-    # 💬 Preguntas una por una
-if "mostrar_preguntas" in st.session_state and st.session_state["mostrar_preguntas"]:
+    else:
+        st.warning("⚠ No se pudo detectar un tema conocido en el PDF.")
+
+# ---- Mostrar preguntas una por una ----
+if st.session_state["mostrar_preguntas"]:
     preguntas = temas[st.session_state["tema"]]["preguntas"]
     i = st.session_state["indice"]
 
@@ -92,12 +103,12 @@ if "mostrar_preguntas" in st.session_state and st.session_state["mostrar_pregunt
         puntaje = st.session_state["puntaje"]
         st.success(f"🎉 Has terminado. Tu puntaje: **{puntaje} de {total}**")
 
-        # Guardar resultado
-        guardar_resultado(nombre_estudiante, st.session_state["tema"], puntaje, total)
+        # Pedir nombre antes de guardar
+        nombre_estudiante = st.text_input("🧑‍🎓 Ingresa tu nombre para guardar el resultado:")
+        if nombre_estudiante:
+            guardar_resultado(nombre_estudiante, st.session_state["tema"], puntaje, total)
+            st.success("✅ Resultado guardado correctamente.")
 
         if st.button("Volver a intentar"):
             for k in ["mostrar_preguntas", "indice", "puntaje", "respondido"]:
-                del st.session_state[k]
-    else:
-        st.warning("⚠ No se pudo detectar un tema conocido en el PDF.")
-
+                st.session_state[k] = None
