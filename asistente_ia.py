@@ -29,7 +29,14 @@ def detectar_tema(texto):
     elif "caída libre" in texto or "9.8" in texto:
         return "Caída Libre"
     return None
-   
+
+# 📥 Guardar resultados
+def guardar_resultado(nombre, tema, puntaje, total):
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    fila = [nombre, tema, puntaje, total, fecha]
+    with open("resultados.csv", "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(fila)   
 
 if pdf_file:
     texto = extraer_texto_pdf(pdf_file)
@@ -46,18 +53,51 @@ if pdf_file:
 
         with col2:
             if st.button("❓ Preguntas"):
-                st.subheader("❓ Preguntas de Opción Múltiple")
-                for i, p in enumerate(temas[tema]["preguntas"], 1):
-                    st.markdown(f"**{i}. {p['pregunta']}**")
-                    st.radio("Selecciona una opción:", p["opciones"], key=f"preg{i}")
-                    st.markdown(f"✅ Respuesta correcta: **{p['respuesta']}**")
-
+                st.session_state["mostrar_preguntas"] = True
+                st.session_state["indice"] = 0
+                st.session_state["puntaje"] = 0
+                st.session_state["respondido"] = False
+                st.session_state["tema"] = tema
+    
         with col3:
             if st.button("💡 Flashcards"):
                 st.subheader("💡 Flashcards")
                 for fc in temas[tema]["flashcards"]:
                     with st.expander(fc["concepto"]):
                         st.write(fc["definicion"])
+    # 💬 Preguntas una por una
+if "mostrar_preguntas" in st.session_state and st.session_state["mostrar_preguntas"]:
+    preguntas = temas[st.session_state["tema"]]["preguntas"]
+    i = st.session_state["indice"]
+
+    if i < len(preguntas):
+        p = preguntas[i]
+        st.markdown(f"### Pregunta {i + 1}: {p['pregunta']}")
+        respuesta_usuario = st.radio("Selecciona una opción:", p["opciones"], key=f"preg{i}")
+
+        if not st.session_state["respondido"]:
+            if st.button("Responder"):
+                if respuesta_usuario == p["respuesta"]:
+                    st.success("✅ ¡Correcto!")
+                    st.session_state["puntaje"] += 1
+                else:
+                    st.error(f"❌ Incorrecto. Respuesta correcta: {p['respuesta']}")
+                st.session_state["respondido"] = True
+        else:
+            if st.button("Siguiente"):
+                st.session_state["indice"] += 1
+                st.session_state["respondido"] = False
+    else:
+        total = len(preguntas)
+        puntaje = st.session_state["puntaje"]
+        st.success(f"🎉 Has terminado. Tu puntaje: **{puntaje} de {total}**")
+
+        # Guardar resultado
+        guardar_resultado(nombre_estudiante, st.session_state["tema"], puntaje, total)
+
+        if st.button("Volver a intentar"):
+            for k in ["mostrar_preguntas", "indice", "puntaje", "respondido"]:
+                del st.session_state[k]
     else:
         st.warning("⚠ No se pudo detectar un tema conocido en el PDF.")
 
