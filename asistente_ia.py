@@ -261,54 +261,42 @@ if st.session_state["mostrar_preguntas"]:
         # -------- GUARDAR RESULTADOS Y DESCARGAR TXT --------
 import base64
 
-def guardar_resultado_txt(nombre, tema, puntaje, total, respuestas):
-    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    nombre_archivo = f"resultado_{nombre.replace(' ', '_') or 'estudiante'}.txt"
-    ruta = os.path.join("resultados", nombre_archivo)
-
-    with open(ruta, "w", encoding="utf-8") as f:
-        f.write(f"👤 Nombre: {nombre}\n")
-        f.write(f"📅 Fecha: {fecha}\n")
-        f.write(f"📚 Tema: {tema}\n")
-        f.write(f"🏁 Puntaje: {puntaje}/{total}\n")
-        f.write("📋 Detalle de preguntas:\n")
-        f.write("-" * 50 + "\n")
-        for i, r in enumerate(respuestas, 1):
-            estado = "✅ Correcto" if r["correcto"] else "❌ Incorrecto"
-            f.write(f"{i}. {r['pregunta']}\n")
-            f.write(f"   ➤ Tu respuesta: {r['respuesta_usuario']}\n")
-            f.write(f"   ✔ Respuesta correcta: {r['respuesta_correcta']} — {estado}\n\n")
-        f.write("=" * 50 + "\n\n")
-    return ruta, nombre_archivo
-
-
-# Guardar resultados
-if "respuestas" not in st.session_state:
-    st.session_state["respuestas"] = []
-
-# Al finalizar
-if st.session_state["mostrar_preguntas"] and st.session_state["indice"] >= len(temas[st.session_state["tema"]]["preguntas"]):
-    total = len(temas[st.session_state["tema"]]["preguntas"])
+else:
+    total = len(preguntas)
     puntaje = st.session_state["puntaje"]
-    st.success(f"🎉 Has terminado. Tu puntaje: **{puntaje} de {total}**")
 
-    ruta_txt, nombre_txt = guardar_resultado_txt(
-        nombre_estudiante.strip(),
-        st.session_state["tema"],
-        puntaje,
-        total,
-        st.session_state["respuestas"]
-    )
+    if "mostrar_resultado_final" not in st.session_state:
+        st.session_state["mostrar_resultado_final"] = False
 
-    # Mostrar botón para descargar el archivo .txt
-    with open(ruta_txt, "rb") as f:
-        contenido = f.read()
-        b64 = base64.b64encode(contenido).decode()
-        href = f'<a href="data:file/txt;base64,{b64}" download="{nombre_txt}">📥 Descargar resultado</a>'
-        st.markdown(href, unsafe_allow_html=True)
+    if not st.session_state["mostrar_resultado_final"]:
+        if st.button("📊 Ver Nota Final"):
+            st.session_state["mostrar_resultado_final"] = True
+            st.rerun()
+           else:
+            nota = (puntaje / total) * 100
+            estado = "✅ Aprobado" if nota >= 60 else "❌ Desaprobado"
 
-    if st.button("🔁 Volver a intentar"):
-        for k in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema", "respuestas"]:
-            st.session_state[k] = None
-        st.rerun()
+            st.success(f"🎯 Tu puntaje final es: **{puntaje} / {total}**")
+            st.info(f"📈 Nota final: **{nota:.2f}%** — {estado}")
 
+            
+
+            # Guardar en TXT
+            ruta_txt, nombre_txt = guardar_resultado_txt(
+                nombre_estudiante.strip(),
+                st.session_state["tema"],
+                puntaje,
+                total,
+                st.session_state["respuestas"]
+            )
+
+            with open(ruta_txt, "rb") as f:
+                contenido = f.read()
+                b64 = base64.b64encode(contenido).decode()
+                href = f'<a href="data:file/txt;base64,{b64}" download="{nombre_txt}">📥 Descargar resultado</a>'
+                st.markdown(href, unsafe_allow_html=True)
+
+            if st.button("🔁 Volver a intentar"):
+                for k in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema", "respuestas", "mostrar_resultado_final"]:
+                    st.session_state[k] = None
+                st.rerun()
