@@ -155,13 +155,17 @@ def extraer_texto_pdf(file):
 
 def detectar_tema(texto):
     texto = texto.lower()
-    if "mru" in texto and "aceleración nula" in texto:
-        return "MRU"
-    elif "mruv" in texto and "v = v₀ + at" in texto:
-        return "MRUV"
-    elif "caída libre" in texto or "9.8" in texto:
+
+    if "mru" in texto or "movimiento rectilíneo uniforme" in texto:
+        if "velocidad constante" in texto or "aceleración nula" in texto:
+            return "MRU"
+    if "mruv" in texto or "movimiento rectilíneo uniformemente variado" in texto:
+        if "v = v0 + at" in texto or "aceleración constante" in texto:
+            return "MRUV"
+    if "caída libre" in texto or "gravedad" in texto or "9.8" in texto or "aceleración gravitatoria" in texto:
         return "Caída Libre"
     return None
+
 
 def guardar_resultado(nombre, tema, puntaje, total):
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
