@@ -244,7 +244,7 @@ if st.session_state["mostrar_preguntas"]:
         st.info("📝 Resultado guardado en `resultados/resultados.csv`.")
 
         if st.button("🔁 Volver a intentar"):
-            for k in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema"]:
-                if k in st.session_state:
-                    del st.session_state[k]
-            st.experimental_rerun()
+          for k in ["mostrar_preguntas", "indice", "puntaje", "respondido", "tema"]:
+             st.session_state[k] = None
+          st.rerun()
+
