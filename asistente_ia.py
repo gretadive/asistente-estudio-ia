@@ -264,7 +264,7 @@ if st.session_state["mostrar_preguntas"]:
         estado = "✅ Aprobado" if nota >= 15 else "❌ Desaprobado"
 
         st.success(f"🎯 Tu puntaje final es: **{puntaje} / {total}**")
-        st.info(f"📈 Nota final: **{nota:.2f}%** — {estado}")
+        st.info(f"📈 Nota final: **{nota}** — {estado}")
 
         # Generar resultado automáticamente
         guardar_resultado(
