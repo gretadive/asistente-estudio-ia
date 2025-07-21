@@ -230,9 +230,10 @@ if st.session_state["mostrar_preguntas"]:
                 st.session_state["respondido"] = True
         else:
             if st.button("➡️ Siguiente"):
-                st.session_state["indice"] += 1
-                st.session_state["respondido"] = False
-                st.experimental_rerun()
+               st.session_state["indice"] += 1
+               st.session_state["respondido"] = False
+               st.rerun()  # ✅ ESTO ES SEGURO
+
 
     else:
         total = len(preguntas)
