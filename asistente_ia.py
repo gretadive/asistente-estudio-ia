@@ -2,9 +2,11 @@ import streamlit as st
 import fitz  # PyMuPDF
 import csv
 import io
+import base64 
 from datetime import datetime
 import sys
 import os
+
 
 # Asegurar path del archivo temas si está separado
 sys.path.append(os.path.dirname(__file__))
